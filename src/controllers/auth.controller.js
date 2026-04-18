@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
 import generateTokenAndSetCookie from "../utils/generateToken.js"
+import getDefaultProfilePic, { isProfilePicBroken } from "../utils/getDefaultProfilePic.js";
 export const signup = async (req, res) => {
     try {
         const { fullname, username, password, confirmedPassword, gender } = req.body;
@@ -16,15 +17,13 @@ export const signup = async (req, res) => {
         const salt= await bcrypt.genSalt(10);
         const hashedPassword= await bcrypt.hash(password,salt);
 
-
-        const boyProfilePic= `https://avatar.iran.liara.run/public/boy?username=${username}`
-        const girlProfilePic= `https://avatar.iran.liara.run/public/girl?username=${username}`
+        const profilePic = getDefaultProfilePic({ username, gender });
         const newUser= new User({
             fullname,
             username,
             password:hashedPassword,
             gender,
-            profilePic: gender=="male" ? boyProfilePic: girlProfilePic
+            profilePic
         })
         if(newUser){
             //Generate JWT token
@@ -63,11 +62,20 @@ export const login = async (req, res) => {
 
         generateTokenAndSetCookie(user._id, res);
 
+        const shouldFixProfilePic = isProfilePicBroken(user.profilePic);
+        const profilePic = shouldFixProfilePic
+			? getDefaultProfilePic({ username: user.username, gender: user.gender })
+			: user.profilePic;
+
+		if (shouldFixProfilePic) {
+			await User.updateOne({ _id: user._id }, { $set: { profilePic } });
+		}
+
         return res.status(200).json({
             _id: user._id,
             fullname: user.fullname,
             username: user.username,
-            profilePic: user.profilePic,
+            profilePic,
         });
     }
     catch(error){

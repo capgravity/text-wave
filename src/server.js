@@ -32,5 +32,7 @@ app.get("*", (req,res) =>{
 
 server.listen(PORT, () => {
     connectToMongoDB();
+    console.log("MongoDB URI configured:", Boolean(process.env.MONGO_URI || process.env.MONGODB_URI || process.env.MONGO_DB_URI));
+
     console.log(`Server is running on port ${PORT}`);
 });
