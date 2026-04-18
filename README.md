@@ -40,7 +40,7 @@ Ensure that you have the following software installed on your system:
 
       ```env
       PORT=5000
-      MONGO_URI=<your MongoDB connection string>
+      MONGO_DB_URI=<your MongoDB connection string>
       JWT_SECRET=<your secret key>
       ```
 
